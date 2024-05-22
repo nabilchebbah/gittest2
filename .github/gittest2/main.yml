@@ -1,0 +1,53 @@
+on:
+  push:
+    branches:
+      - master
+
+name: Analyse de l'application
+
+jobs:
+  build:
+    name: Build, Test, and Release APK
+    runs-on: macos-latest
+    steps:
+      # Checkout the code from the repository
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      # Set up Java environment
+      - name: Set up Java
+        uses: actions/setup-java@v2
+        with:
+          distribution: 'zulu'
+          java-version: '11'
+
+      # Set up Flutter environment
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: 'stable'
+
+
+      # Install dependencies
+      - name: Install dependencies
+        run: flutter pub get
+
+      # Run static code analysis
+      - name: Analyze code
+        run: flutter analyze
+
+      # Run tests
+      - name: Run tests
+        run: flutter test
+
+      # Build the APK
+      - name: Build APK
+        run: flutter build apk --release --split-per-abi
+
+      # Publish the APK to GitHub Releases
+      - name: Publish APK to GitHub Releases
+        uses: ncipollo/release-action@v1
+        with:
+          artifacts: "build/app/outputs/apk/release/*"
+          tag: v0.0.1
+          token: ${{ secrets.ABCD }}
